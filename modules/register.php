@@ -1,17 +1,77 @@
 <!DOCTYPE html>
 <?php
-    include "./includes/connection.php";
+  include '../includes/connection.php';
 
-    if(isset($_POST['submit'])){
+  if(isset($_POST['submit'])){
 
-        $username = mysqli_real_escape_string($con, $_POST['username']);
-        $email = mysqli_real_escape_string($con, $_POST['email']);
-        $password = mysqli_real_escape_string($con, $_POST['password']);
-        $cpassword = mysqli_real_escape_string($con, $_POST['c_password']);
-        $type = mysqli_real_escape_string($con, $_POST['user_type']);
-        
-        
+    $con;
+    $username = mysqli_real_escape_string($con, $_POST['username']);
+    $email = mysqli_real_escape_string($con, $_POST['email']);
+    $password = mysqli_real_escape_string($con, $_POST['password']);
+    $cpassword = mysqli_real_escape_string($con, $_POST['cpassword']);
+    $type = mysqli_real_escape_string($con, $_POST['user_type']);
+
+    
+
+     //Validation
+    if(empty($username)){
+      $error = 'Username is required';
     }
+    elseif(empty($email)){
+      $error = 'Email is required';
+    }
+    elseif(empty($password)){
+      $error = 'Password is required';
+    }
+    elseif($password != $cpassword){
+      $error = 'Password does not match';
+    }
+    elseif(strlen($username) <4){
+      $error= "Username must be atlest 4 Characters";
+    }
+    //
+    elseif(strlen($password) <6){
+      $error= "Username must be atleast 6 Characters";
+    }
+    //check email
+    else{
+      $emailquery = "SELECT * FROM users WHERE email = '{$email}'";
+      
+      $query = mysqli_query($con,$emailquery);
+      
+      $emailcount = mysqli_num_rows($query);
+      
+      
+      if($emailcount > 0){
+        $error = "Email already exist";
+      }
+      //for username
+      $usernamequery = "SELECT * FROM users WHERE username = '{$username}'";
+      $query = mysqli_query($con,$usernamequery);
+
+      $usernamecount = mysqli_num_rows($query);
+     
+
+      if($usernamecount > 0){
+        $error = "Username already exist";
+      }
+      
+      else{
+
+        //password encryption
+        // $pass = password_hash($password, PASSWORD_BCRYPT);
+        // $cpass = password_hash($cpassword, PASSWORD_BCRYPT);
+
+        //insert into database
+        $insertquery = "INSERT INTO users (username, email, password, c_password, user_type) VALUES('{$username}','{$email}','{$password}','{$cpassword}','{$type}')";
+        $iquery = mysqli_query($con,$insertquery);
+        if($iquery){
+          echo "Registered";
+          // header('location:./modules/login.php');
+        }
+      }
+    }
+  }
 
 
 ?>
@@ -32,6 +92,11 @@
       <div class="form-container">
         <div class="title"><span>Register Now</span></div>
         <form action="register.php" method="POST">
+          <p>
+            <?php
+              echo $error;
+            ?>
+          </p>
         <div class="row">
         <i class="fas fa-user"></i>
         <input type="text" placeholder="Username" name="username" value="<?php if(isset($error)){ echo $username; }?>">
